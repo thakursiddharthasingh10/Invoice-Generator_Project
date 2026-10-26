@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F5F8FD] text-[#14213D] font-sans;
+  }
+}
+
+/* Dedicated Print Stylesheet for A4 professional invoices */
+@media print {
+  /* Hide application chrome, navbar, toolbars, notifications, voice generator */
+  header, 
+  nav, 
+  footer,
+  .no-print,
+  button,
+  .toast-container,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #14213D !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Force display of the invoice printable sheet */
+  .invoice-printable {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20mm 15mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-after: auto;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
