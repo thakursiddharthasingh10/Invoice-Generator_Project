@@ -1,31 +1,27 @@
 import React from 'react';
 import { 
   FileText, 
-  DollarSign, 
+  Receipt, 
   CheckCircle2, 
   Clock, 
   AlertOctagon, 
   Plus, 
   ArrowRight, 
-  TrendingUp,
-  Receipt,
-  RotateCcw,
   Sparkles,
-  ExternalLink,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { Invoice } from '../types/invoice';
 import { calculateInvoiceSummary } from '../utils/invoiceCalculations';
 import { formatCurrency } from '../utils/currencyFormatter';
-import { resetToDemoData } from '../utils/invoiceStorage';
-import { useToast } from './Toast';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardProps {
   invoices: Invoice[];
   onNewInvoice: () => void;
   onSelectInvoice: (invoice: Invoice) => void;
   onViewAllInvoices: () => void;
-  onResetDemo: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -33,11 +29,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onNewInvoice,
   onSelectInvoice,
   onViewAllInvoices,
-  onResetDemo,
 }) => {
-  const { showToast } = useToast();
+  const { user } = useAuth();
 
-  // Aggregate stats
+  // Aggregate stats calculated exclusively from authenticated user's invoices
   const stats = React.useMemo(() => {
     let totalInvoices = invoices.length;
     let totalInvoicedAmount = 0;
@@ -83,26 +78,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const recentInvoices = invoices.slice(0, 5);
 
-  const handleResetToDemo = () => {
-    onResetDemo();
-    showToast('Loaded sample demo invoice into dashboard.', 'success');
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Welcome & Primary CTA Banner */}
+      {/* Personalized Welcome Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white shadow-lg shadow-blue-500/10">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold tracking-wide">
               <Sparkles className="w-3.5 h-3.5 text-blue-200" />
-              <span>Smart Invoicing & Voice Synthesis</span>
+              <span>Personalized Invoice Workspace</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Create, Calculate & Narrate Professional Invoices
+              Welcome back, {user?.fullName || 'Business Owner'}!
             </h1>
             <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
-              Auto-calculate Indian GST, IGST, and itemized totals in real time. Generate spoken audio narrations and export crisp vector A4 PDFs in seconds.
+              Your invoices and line items are securely persisted in your dedicated database. Create new invoices, auto-calculate Indian GST, listen to voice narrations, and export A4 PDFs.
             </p>
           </div>
 
@@ -115,23 +105,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <Plus className="w-4 h-4" />
               <span>Create New Invoice</span>
             </button>
-            <button
-              type="button"
-              onClick={handleResetToDemo}
-              className="inline-flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-white/15 hover:bg-white/20 text-white font-medium text-xs sm:text-sm backdrop-blur-md transition-colors"
-              title="Reset sample data"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Demo Sample</span>
-            </button>
           </div>
         </div>
 
-        {/* Subtle Decorative Geometry */}
+        {/* Decorative Blur */}
         <div className="absolute right-0 top-0 -mt-10 -mr-10 w-72 h-72 bg-white/5 rounded-full blur-2xl pointer-events-none" />
       </div>
 
-      {/* Summary Statistics Cards (Section 3B) */}
+      {/* Summary Statistics Cards (Section 6) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Invoiced Amount */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-shadow">
@@ -148,7 +129,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {formatCurrency(stats.totalInvoicedAmount, 'INR')}
             </div>
             <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-              <span>Across {stats.totalInvoices} created invoices</span>
+              <span>Across {stats.totalInvoices} saved {stats.totalInvoices === 1 ? 'invoice' : 'invoices'}</span>
             </div>
           </div>
         </div>
@@ -157,7 +138,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Invoices Created
+              Your Invoices
             </span>
             <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <FileText className="w-4 h-4" />
@@ -230,22 +211,40 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Recent Invoices</h2>
-            <p className="text-xs text-slate-500">Quickly resume editing or previewing your recent invoices</p>
+            <h2 className="text-base font-bold text-slate-900">Your Recent Invoices</h2>
+            <p className="text-xs text-slate-500">Invoices saved in your database account</p>
           </div>
-          <button
-            type="button"
-            onClick={onViewAllInvoices}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
-          >
-            <span>View All ({invoices.length})</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {invoices.length > 0 && (
+            <button
+              type="button"
+              onClick={onViewAllInvoices}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              <span>View All ({invoices.length})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {recentInvoices.length === 0 ? (
-          <div className="p-10 text-center text-slate-400 text-xs">
-            No invoices yet. Click "+ Create New Invoice" to get started.
+          <div className="p-10 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">No invoices in your account yet</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                You haven't created any invoices yet. Click below to craft your first invoice with automatic taxes and live preview.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onNewInvoice}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Your First Invoice</span>
+            </button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -270,7 +269,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-900 text-xs sm:text-sm">
-                          {inv.client.name || 'Unnamed Client'}
+                          {inv.client?.name || 'Unnamed Client'}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeColor}`}>
                           {inv.status}
